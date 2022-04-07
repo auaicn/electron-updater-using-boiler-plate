@@ -5,7 +5,8 @@
   "private": true,
   "author": "Kyungho, Park <crorowslowpp@gmail.com>",
   "license": "MIT",
-  "main": "src/main/electron.js",
+  "main": "public/electron.js",
+  "homepage": "./",
   "dependencies": {
     "@testing-library/jest-dom": "^5.16.4",
     "@testing-library/react": "^12.1.4",
@@ -33,14 +34,10 @@
     "react-build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
-
-    "type-check": "tsc --project tsconfig.json",
-    "predevelop": "npm run type-check",
-    "develop": "concurrently \"cross-env BROWSER=none npm run react-start\" \"wait-on http://localhost:3000 && electron .\"",
-    "prebuild": "npm run react-build",
-    "build":"electron-builder",
-    "prepublish": "npm run react-build",
-    "publish":"electron-builder --publish=always"
+    "start": "tsc ./public/electron.ts && concurrently \"cross-env BROWSER=none npm run react-start\" \"wait-on http://localhost:3000 && electron .\"",
+    "build": "npm run react-build && electron-builder",
+    "release": "npm run react-build && electron-builder --publish=always",
+    "lint": "eslint './src**/*.{ts,tsx}'"
   },
   "eslintConfig": {
     "extends": [

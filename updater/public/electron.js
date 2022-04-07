@@ -16,6 +16,7 @@ var createWindow = function () {
         webPreferences: {
             // node환경처럼 사용하기
             nodeIntegration: true,
+            // enableRemoteModule: true,
             // 개발자도구
             devTools: isDev
         }
@@ -30,6 +31,7 @@ var createWindow = function () {
     // Emitted when the window is closed.
     mainWindow.on('closed', function () { return (mainWindow = undefined); });
     mainWindow.focus();
+    mainWindow.minimize();
 };
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.

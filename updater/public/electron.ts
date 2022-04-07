@@ -16,6 +16,7 @@ const createWindow = () => {
     webPreferences: {
       // node환경처럼 사용하기
       nodeIntegration: true,
+      // enableRemoteModule: true,
       // 개발자도구
       devTools: isDev,
     },
