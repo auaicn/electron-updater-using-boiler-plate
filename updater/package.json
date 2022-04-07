@@ -6,6 +6,7 @@
   "author": "Kyungho, Park <crorowslowpp@gmail.com>",
   "license": "MIT",
   "main": "public/electron.js",
+  "repository": "https://github.com/auaicn/electron-updater-using-boiler-plate",
   "homepage": "./",
   "dependencies": {
     "@testing-library/jest-dom": "^5.16.4",
@@ -37,7 +38,7 @@
     "eject": "react-scripts eject",
     "start": "tsc ./public/electron.ts && concurrently \"cross-env BROWSER=none npm run react-start\" \"wait-on http://localhost:3000 && electron .\"",
     "build": "npm run react-build && electron-builder",
-    "release": "npm run react-build && electron-builder --publish=always",
+    "release": "npm run react-build && GH_TOKEN=$GH_TOKEN electron-builder --publish=always",
     "draft-release": "electron-builder",
     "lint": "eslint './src**/*.{ts,tsx}'"
   },
@@ -60,10 +61,9 @@
     ]
   },
   "build": {
-    "win": {
+    "mac": {
       "publish": [
-        "github",
-        "bitbucket"
+        "github"
       ]
     }
   }

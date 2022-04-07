@@ -6,7 +6,7 @@ var path = require("path");
 var dotenv = require("dotenv");
 dotenv.config();
 if ('GH_TOKEN' in process.env) {
-    console.log(process, process.env['GH_TOKEN']);
+    console.log("process", process.env['GH_TOKEN']);
 }
 var mainWindow;
 var createWindow = function () {
