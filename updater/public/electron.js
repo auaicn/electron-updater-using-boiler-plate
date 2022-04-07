@@ -3,6 +3,11 @@ exports.__esModule = true;
 var electron_1 = require("electron");
 var isDev = require("electron-is-dev");
 var path = require("path");
+var dotenv = require("dotenv");
+dotenv.config();
+if ('GH_TOKEN' in process.env) {
+    console.log(process, process.env['GH_TOKEN']);
+}
 var mainWindow;
 var createWindow = function () {
     mainWindow = new electron_1.BrowserWindow({
@@ -27,11 +32,10 @@ var createWindow = function () {
     if (isDev) {
         mainWindow.webContents.openDevTools({ mode: 'detach' });
     }
-    mainWindow.setResizable(true);
     // Emitted when the window is closed.
     mainWindow.on('closed', function () { return (mainWindow = undefined); });
+    mainWindow.setFullScreen(false);
     mainWindow.focus();
-    mainWindow.minimize();
 };
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.

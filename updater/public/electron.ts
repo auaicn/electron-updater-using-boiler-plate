@@ -1,6 +1,9 @@
 import { app, BrowserWindow } from 'electron';
 import * as isDev from 'electron-is-dev';
 import * as path from 'path';
+import * as dotenv from 'dotenv';
+
+dotenv.config();
 
 let mainWindow: BrowserWindow;
 
@@ -30,10 +33,9 @@ const createWindow = () => {
     mainWindow.webContents.openDevTools({ mode: 'detach' });
   }
 
-  mainWindow.setResizable(true);
-
   // Emitted when the window is closed.
   mainWindow.on('closed', () => (mainWindow = undefined!));
+  mainWindow.setFullScreen(false);
   mainWindow.focus();
 };
 

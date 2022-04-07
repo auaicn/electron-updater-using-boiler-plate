@@ -24,6 +24,7 @@
   "devDependencies": {
     "concurrently": "^7.1.0",
     "cross-env": "^7.0.3",
+    "dotenv": "^16.0.0",
     "electron": "^18.0.3",
     "electron-builder": "^22.14.13",
     "typescript": "^4.6.3",
@@ -37,6 +38,7 @@
     "start": "tsc ./public/electron.ts && concurrently \"cross-env BROWSER=none npm run react-start\" \"wait-on http://localhost:3000 && electron .\"",
     "build": "npm run react-build && electron-builder",
     "release": "npm run react-build && electron-builder --publish=always",
+    "draft-release": "electron-builder",
     "lint": "eslint './src**/*.{ts,tsx}'"
   },
   "eslintConfig": {
@@ -56,5 +58,13 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
+  },
+  "build": {
+    "win": {
+      "publish": [
+        "github",
+        "bitbucket"
+      ]
+    }
   }
 }
