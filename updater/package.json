@@ -39,8 +39,8 @@
     "test": "react-scripts test",
     "eject": "react-scripts eject",
     "start": "tsc ./public/electron.ts && concurrently \"cross-env BROWSER=none npm run react-start\" \"wait-on http://localhost:3000 && electron .\"",
-    "build": "npm run react-build && cross-env electron-builder",
-    "release": "npm run react-build && GH_TOKEN=$GH_TOKEN cross-env electron-builder --publish=always",
+    "build": "npm run react-build && electron-builder",
+    "release": "npm run react-build && GH_TOKEN=$GH_TOKEN electron-builder --publish=always",
     "draft-release": "electron-builder",
     "lint": "eslint './src**/*.{ts,tsx}'"
   },
