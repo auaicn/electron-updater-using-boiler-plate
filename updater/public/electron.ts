@@ -1,11 +1,14 @@
 import { app, BrowserWindow } from 'electron';
+import { autoUpdater } from "electron-updater"
 import * as isDev from 'electron-is-dev';
 import * as path from 'path';
 
-let mainWindow: BrowserWindow;
+autoUpdater.checkForUpdatesAndNotify();
+
+let win: BrowserWindow;
 
 const createWindow = () => {
-  mainWindow = new BrowserWindow({
+  win = new BrowserWindow({
     width: 900,
     height: 680,
     center: true,
@@ -24,16 +27,16 @@ const createWindow = () => {
 
   // production에서는 패키지 내부 리소스에 접근.
   // 개발 중에는 개발 도구에서 호스팅하는 주소에서 로드.
-  mainWindow.loadURL(isDev ? 'http://localhost:3000' : `file://${path.join(__dirname, '../build/index.html')}`);
+  win.loadURL(isDev ? 'http://localhost:3000' : `file://${path.join(__dirname, '../build/index.html')}`);
 
   if (isDev) {
-    mainWindow.webContents.openDevTools({ mode: 'detach' });
+    win.webContents.openDevTools({ mode: 'detach' });
   }
 
   // Emitted when the window is closed.
-  mainWindow.on('closed', () => (mainWindow = undefined!));
-  mainWindow.setFullScreen(false);
-  mainWindow.focus();
+  win.on('closed', () => (win = undefined!));
+  win.setFullScreen(false);
+  win.focus();
 };
 
 // This method will be called when Electron has finished
@@ -49,7 +52,8 @@ app.on('window-all-closed', () => {
 });
 
 app.on('activate', () => {
-  if (mainWindow === null) {
+  if (win === null) {
     createWindow();
+
   }
 });
