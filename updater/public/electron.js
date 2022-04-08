@@ -1,54 +1,152 @@
 "use strict";
+// This is free and unencumbered software released into the public domain.
+// See LICENSE for details
 exports.__esModule = true;
 var electron_1 = require("electron");
+var electron_updater_1 = require("electron-updater");
 var isDev = require("electron-is-dev");
 var path = require("path");
-var dotenv = require("dotenv");
-dotenv.config();
-if ('GH_TOKEN' in process.env) {
-    console.log("process", process.env['GH_TOKEN']);
+var electron_log_1 = require("electron-log");
+//-------------------------------------------------------------------
+// Logging
+//
+// THIS SECTION IS NOT REQUIRED
+//
+// This logging setup is not required for auto-updates to work,
+// but it sure makes debugging easier :)
+//-------------------------------------------------------------------
+electron_updater_1.autoUpdater.logger = electron_log_1["default"];
+// autoUpdater.logger.transports.file.level = 'info';
+// log.info('App starting...');
+//-------------------------------------------------------------------
+// Define the menu
+//
+// THIS SECTION IS NOT REQUIRED
+//-------------------------------------------------------------------
+// let template = [];
+// if (process.platform === "darwin") {
+//   // OS X
+//   const name = app.getName();
+//   template.unshift({
+//     label: name,
+//     submenu: [
+//       {
+//         label: "About " + name,
+//         role: "about",
+//       },
+//       {
+//         label: "Quit",
+//         accelerator: "Command+Q",
+//         click() {
+//           app.quit();
+//         },
+//       },
+//     ],
+//   });
+// }
+//-------------------------------------------------------------------
+// Open a window that displays the version
+//
+// THIS SECTION IS NOT REQUIRED
+//
+// This isn't required for auto-updates to work, but it's easier
+// for the app to show a window than to have to click "About" to see
+// that updates are working.
+//-------------------------------------------------------------------
+var win;
+function sendStatusToWindow(text) {
+    electron_log_1["default"].info(text);
+    win.webContents.send("message", text);
 }
-var mainWindow;
-var createWindow = function () {
-    mainWindow = new electron_1.BrowserWindow({
-        width: 900,
-        height: 680,
-        center: true,
-        kiosk: !isDev,
-        resizable: true,
-        fullscreen: false,
-        fullscreenable: true,
+function createDefaultWindow() {
+    win = new electron_1.BrowserWindow({
         webPreferences: {
-            // node환경처럼 사용하기
             nodeIntegration: true,
-            // enableRemoteModule: true,
-            // 개발자도구
-            devTools: isDev
+            contextIsolation: false
         }
     });
-    // production에서는 패키지 내부 리소스에 접근.
-    // 개발 중에는 개발 도구에서 호스팅하는 주소에서 로드.
-    mainWindow.loadURL(isDev ? 'http://localhost:3000' : "file://".concat(path.join(__dirname, '../build/index.html')));
-    if (isDev) {
-        mainWindow.webContents.openDevTools({ mode: 'detach' });
-    }
-    // Emitted when the window is closed.
-    mainWindow.on('closed', function () { return (mainWindow = undefined); });
-    mainWindow.setFullScreen(false);
-    mainWindow.focus();
-};
-// This method will be called when Electron has finished
-// initialization and is ready to create browser windows.
-// Some APIs can only be used after this event occurs.
-electron_1.app.on('ready', createWindow);
-// Quit when all windows are closed.
-electron_1.app.on('window-all-closed', function () {
-    if (process.platform !== 'darwin') {
-        electron_1.app.quit();
-    }
+    win.webContents.openDevTools();
+    win.on("closed", function () {
+        win = null;
+    });
+    //   win.loadURL(`file://${__dirname}/version.html#v${app.getVersion()}`);
+    win.loadURL(isDev
+        ? "http://localhost:3000"
+        : "file://".concat(path.join(__dirname, "../build/index.html")));
+    return win;
+}
+electron_updater_1.autoUpdater.on("checking-for-update", function () {
+    sendStatusToWindow("Checking for update...");
 });
-electron_1.app.on('activate', function () {
-    if (mainWindow === null) {
-        createWindow();
-    }
+electron_updater_1.autoUpdater.on("update-available", function (info) {
+    sendStatusToWindow("Update available.");
 });
+electron_updater_1.autoUpdater.on("update-not-available", function (info) {
+    sendStatusToWindow("Update not available.");
+});
+electron_updater_1.autoUpdater.on("error", function (err) {
+    sendStatusToWindow("Error in auto-updater. " + err);
+});
+electron_updater_1.autoUpdater.on("download-progress", function (progressObj) {
+    var log_message = "Download speed: " + progressObj.bytesPerSecond;
+    log_message = log_message + " - Downloaded " + progressObj.percent + "%";
+    log_message =
+        log_message +
+            " (" +
+            progressObj.transferred +
+            "/" +
+            progressObj.total +
+            ")";
+    sendStatusToWindow(log_message);
+});
+electron_updater_1.autoUpdater.on("update-downloaded", function (info) {
+    sendStatusToWindow("Update downloaded");
+});
+electron_1.app.on("ready", function () {
+    // Create the Menu
+    //   const menu = Menu.buildFromTemplate(template);
+    //   Menu.setApplicationMenu(menu);
+    createDefaultWindow();
+});
+electron_1.app.on("window-all-closed", function () {
+    electron_1.app.quit();
+});
+//
+// CHOOSE one of the following options for Auto updates
+//
+//-------------------------------------------------------------------
+// Auto updates - Option 1 - Simplest version
+//
+// This will immediately download an update, then install when the
+// app quits.
+//-------------------------------------------------------------------
+electron_1.app.on("ready", function () {
+    electron_updater_1.autoUpdater.checkForUpdatesAndNotify();
+});
+//-------------------------------------------------------------------
+// Auto updates - Option 2 - More control
+//
+// For details about these events, see the Wiki:
+// https://github.com/electron-userland/electron-builder/wiki/Auto-Update#events
+//
+// The app doesn't need to listen to any events except `update-downloaded`
+//
+// Uncomment any of the below events to listen for them.  Also,
+// look in the previous section to see them being used.
+//-------------------------------------------------------------------
+// app.on('ready', function()  {
+//   autoUpdater.checkForUpdates();
+// });
+// autoUpdater.on('checking-for-update', () => {
+// })
+// autoUpdater.on('update-available', (info) => {
+// })
+// autoUpdater.on('update-not-available', (info) => {
+// })
+// autoUpdater.on('error', (err) => {
+// })
+// autoUpdater.on('download-progress', (progressObj) => {
+// })
+// autoUpdater.on('update-downloaded', (info) => {
+//   autoUpdater.quitAndInstall();
+// })

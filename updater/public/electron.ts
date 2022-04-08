@@ -1,59 +1,162 @@
-import { app, BrowserWindow } from 'electron';
-import { autoUpdater } from "electron-updater"
-import * as isDev from 'electron-is-dev';
-import * as path from 'path';
+// This is free and unencumbered software released into the public domain.
+// See LICENSE for details
 
-autoUpdater.checkForUpdatesAndNotify();
+import { app, BrowserWindow } from "electron";
+import { autoUpdater } from "electron-updater";
+import * as isDev from "electron-is-dev";
+import * as path from "path";
+import log from "electron-log";
 
-let win: BrowserWindow;
+//-------------------------------------------------------------------
+// Logging
+//
+// THIS SECTION IS NOT REQUIRED
+//
+// This logging setup is not required for auto-updates to work,
+// but it sure makes debugging easier :)
+//-------------------------------------------------------------------
+autoUpdater.logger = log;
+// autoUpdater.logger.transports.file.level = 'info';
+// log.info('App starting...');
 
-const createWindow = () => {
+//-------------------------------------------------------------------
+// Define the menu
+//
+// THIS SECTION IS NOT REQUIRED
+//-------------------------------------------------------------------
+// let template = [];
+// if (process.platform === "darwin") {
+//   // OS X
+//   const name = app.getName();
+//   template.unshift({
+//     label: name,
+//     submenu: [
+//       {
+//         label: "About " + name,
+//         role: "about",
+//       },
+//       {
+//         label: "Quit",
+//         accelerator: "Command+Q",
+//         click() {
+//           app.quit();
+//         },
+//       },
+//     ],
+//   });
+// }
+
+//-------------------------------------------------------------------
+// Open a window that displays the version
+//
+// THIS SECTION IS NOT REQUIRED
+//
+// This isn't required for auto-updates to work, but it's easier
+// for the app to show a window than to have to click "About" to see
+// that updates are working.
+//-------------------------------------------------------------------
+let win;
+
+function sendStatusToWindow(text) {
+  log.info(text);
+  win.webContents.send("message", text);
+}
+function createDefaultWindow() {
   win = new BrowserWindow({
-    width: 900,
-    height: 680,
-    center: true,
-    kiosk: !isDev,
-    resizable: true,
-    fullscreen: false,
-    fullscreenable: true,
     webPreferences: {
-      // node환경처럼 사용하기
       nodeIntegration: true,
-      // enableRemoteModule: true,
-      // 개발자도구
-      devTools: isDev,
+      contextIsolation: false,
     },
   });
-
-  // production에서는 패키지 내부 리소스에 접근.
-  // 개발 중에는 개발 도구에서 호스팅하는 주소에서 로드.
-  win.loadURL(isDev ? 'http://localhost:3000' : `file://${path.join(__dirname, '../build/index.html')}`);
-
-  if (isDev) {
-    win.webContents.openDevTools({ mode: 'detach' });
-  }
-
-  // Emitted when the window is closed.
-  win.on('closed', () => (win = undefined!));
-  win.setFullScreen(false);
-  win.focus();
-};
-
-// This method will be called when Electron has finished
-// initialization and is ready to create browser windows.
-// Some APIs can only be used after this event occurs.
-app.on('ready', createWindow);
-
-// Quit when all windows are closed.
-app.on('window-all-closed', () => {
-  if (process.platform !== 'darwin') {
-    app.quit();
-  }
+  win.webContents.openDevTools();
+  win.on("closed", () => {
+    win = null;
+  });
+  //   win.loadURL(`file://${__dirname}/version.html#v${app.getVersion()}`);
+  win.loadURL(
+    isDev
+      ? "http://localhost:3000"
+      : `file://${path.join(__dirname, "../build/index.html")}`
+  );
+  return win;
+}
+autoUpdater.on("checking-for-update", () => {
+  sendStatusToWindow("Checking for update...");
 });
 
-app.on('activate', () => {
-  if (win === null) {
-    createWindow();
-
-  }
+autoUpdater.on("update-available", (info) => {
+  sendStatusToWindow("Update available.");
 });
+autoUpdater.on("update-not-available", (info) => {
+  sendStatusToWindow("Update not available.");
+});
+autoUpdater.on("error", (err) => {
+  sendStatusToWindow("Error in auto-updater. " + err);
+});
+autoUpdater.on("download-progress", (progressObj) => {
+  let log_message = "Download speed: " + progressObj.bytesPerSecond;
+  log_message = log_message + " - Downloaded " + progressObj.percent + "%";
+  log_message =
+    log_message +
+    " (" +
+    progressObj.transferred +
+    "/" +
+    progressObj.total +
+    ")";
+  sendStatusToWindow(log_message);
+});
+autoUpdater.on("update-downloaded", (info) => {
+  sendStatusToWindow("Update downloaded");
+});
+app.on("ready", function () {
+  // Create the Menu
+//   const menu = Menu.buildFromTemplate(template);
+//   Menu.setApplicationMenu(menu);
+
+  createDefaultWindow();
+});
+app.on("window-all-closed", () => {
+  app.quit();
+});
+
+//
+// CHOOSE one of the following options for Auto updates
+//
+
+//-------------------------------------------------------------------
+// Auto updates - Option 1 - Simplest version
+//
+// This will immediately download an update, then install when the
+// app quits.
+//-------------------------------------------------------------------
+app.on("ready", function () {
+  autoUpdater.checkForUpdatesAndNotify();
+});
+
+//-------------------------------------------------------------------
+// Auto updates - Option 2 - More control
+//
+// For details about these events, see the Wiki:
+// https://github.com/electron-userland/electron-builder/wiki/Auto-Update#events
+//
+// The app doesn't need to listen to any events except `update-downloaded`
+//
+// Uncomment any of the below events to listen for them.  Also,
+// look in the previous section to see them being used.
+//-------------------------------------------------------------------
+// app.on('ready', function()  {
+//   autoUpdater.checkForUpdates();
+// });
+// autoUpdater.on('checking-for-update', () => {
+// })
+// autoUpdater.on('update-available', (info) => {
+// })
+// autoUpdater.on('update-not-available', (info) => {
+// })
+// autoUpdater.on('error', (err) => {
+// })
+// autoUpdater.on('download-progress', (progressObj) => {
+// })
+// autoUpdater.on('update-downloaded', (info) => {
+//   autoUpdater.quitAndInstall();
+// })
