@@ -1,8 +1,8 @@
 {
   "name": "updater",
   "description": "description",
-  "version": "1.0.1",
-  "private": true,
+  "version": "2.0.1-personal-true",
+  "private": false,
   "author": "Kyungho, Park <crorowslowpp@gmail.com>",
   "license": "MIT",
   "main": "public/electron.js",
@@ -39,8 +39,8 @@
     "test": "react-scripts test",
     "eject": "react-scripts eject",
     "start": "tsc ./public/electron.ts && concurrently \"cross-env BROWSER=none npm run react-start\" \"wait-on http://localhost:3000 && electron .\"",
-    "build": "npm run react-build && electron-builder",
-    "release": "npm run react-build && GH_TOKEN=$GH_TOKEN electron-builder --publish=always",
+    "build": "npm run react-build && cross-env electron-builder",
+    "release": "npm run react-build && GH_TOKEN=$GH_TOKEN cross-env electron-builder --publish=always",
     "draft-release": "electron-builder",
     "lint": "eslint './src**/*.{ts,tsx}'"
   },
@@ -63,8 +63,17 @@
     ]
   },
   "build": {
+    "productName": "auto-updater",
     "appId": "com.electron.auaicn",
+    "asar": true,
     "mac": {
+      "target": "dmg",
+      "publish": [
+        "github"
+      ]
+    },
+    "win": {
+      "target": "NSIS",
       "publish": [
         "github"
       ]
