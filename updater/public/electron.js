@@ -11,7 +11,7 @@ var win;
 // autoUpdate 가 내부적으로 찍는 로그를 수집하기 위해서 설정한다.
 electron_updater_1.autoUpdater.logger = electron_log_1["default"];
 electron_updater_1.autoUpdater.on("checking-for-update", function () {
-    sendStatusToWindow("Checking for update...");
+    sendStatusToWindow("Checking for update... " + "current version is " + process.env.npm_package_version);
 });
 electron_updater_1.autoUpdater.on("update-available", function (info) {
     sendStatusToWindow("Update available.");

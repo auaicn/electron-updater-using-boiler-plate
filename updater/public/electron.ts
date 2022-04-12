@@ -13,7 +13,7 @@ let win;
 autoUpdater.logger = log;
 
 autoUpdater.on("checking-for-update", () => {
-  sendStatusToWindow("Checking for update...");
+  sendStatusToWindow("Checking for update... " + "current version is " + process.env.npm_package_version);
 });
 
 autoUpdater.on("update-available", (info) => {
