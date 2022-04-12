@@ -8,6 +8,7 @@ var isDev = require("electron-is-dev");
 var path = require("path");
 var electron_log_1 = require("electron-log");
 var win;
+// autoUpdate 가 내부적으로 찍는 로그를 수집하기 위해서 설정한다.
 electron_updater_1.autoUpdater.logger = electron_log_1["default"];
 electron_updater_1.autoUpdater.on("checking-for-update", function () {
     sendStatusToWindow("Checking for update...");
@@ -33,8 +34,22 @@ electron_updater_1.autoUpdater.on("download-progress", function (progressObj) {
             ")";
     sendStatusToWindow(log_message);
 });
-electron_updater_1.autoUpdater.on("update-downloaded", function (info) {
-    sendStatusToWindow("Update downloaded");
+// autoUpdater.on("update-downloaded", (info) => {
+//   sendStatusToWindow("Update downloaded");
+// });
+electron_updater_1.autoUpdater.on('update-downloaded', function (event, releaseNotes, releaseName, releaseDate, updateURL) {
+    electron_log_1["default"].info('Successfully downloaded from', updateURL);
+    var dialogOpts = {
+        type: 'info',
+        buttons: ['Restart', 'Later'],
+        title: 'Application Update',
+        message: process.platform === 'win32' ? releaseNotes : releaseName,
+        detail: 'A new version has been downloaded. Restart the application to apply the updates.'
+    };
+    electron_1.dialog.showMessageBox(dialogOpts).then(function (returnValue) {
+        if (returnValue.response === 0)
+            electron_updater_1.autoUpdater.quitAndInstall();
+    });
 });
 function sendStatusToWindow(text) {
     electron_log_1["default"].info('[Event]', text);
@@ -112,8 +127,8 @@ electron_1.app.on("window-all-closed", function () {
 //-------------------------------------------------------------------
 electron_1.app.on("ready", function () {
     electron_log_1["default"].info('App starting...');
+    // log.info('AutoUpdater feed URL:', autoUpdater.getFeedURL()); // deprecated
     electron_updater_1.autoUpdater.checkForUpdates();
-    // autoUpdater.checkForUpdatesAndNotify();
 });
 //-------------------------------------------------------------------
 // Auto updates - Option 2 - More control

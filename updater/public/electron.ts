@@ -1,7 +1,7 @@
 // This is free and unencumbered software released into the public domain.
 // See LICENSE for details
 
-import { app, BrowserWindow } from "electron";
+import { app, dialog, BrowserWindow } from "electron";
 import { autoUpdater } from "electron-updater";
 import * as isDev from "electron-is-dev";
 import * as path from "path";
@@ -41,9 +41,25 @@ autoUpdater.on("download-progress", (progressObj) => {
   sendStatusToWindow(log_message);
 });
 
-autoUpdater.on("update-downloaded", (info) => {
-  sendStatusToWindow("Update downloaded");
-});
+// autoUpdater.on("update-downloaded", (info) => {
+//   sendStatusToWindow("Update downloaded");
+// });
+
+autoUpdater.on('update-downloaded', (event, releaseNotes, releaseName, releaseDate, updateURL) => {
+  log.info('Successfully downloaded from', updateURL);
+
+  const dialogOpts = {
+    type: 'info',
+    buttons: ['Restart', 'Later'],
+    title: 'Application Update',
+    message: process.platform === 'win32' ? releaseNotes : releaseName,
+    detail: 'A new version has been downloaded. Restart the application to apply the updates.'
+  }
+
+  dialog.showMessageBox(dialogOpts).then((returnValue) => {
+    if (returnValue.response === 0) autoUpdater.quitAndInstall()
+  })
+})
 
 function sendStatusToWindow(text) {
   log.info('[Event]', text);
@@ -135,8 +151,8 @@ app.on("window-all-closed", () => {
 app.on("ready", function () {
   log.info('App starting...');
 
+  // log.info('AutoUpdater feed URL:', autoUpdater.getFeedURL()); // deprecated
   autoUpdater.checkForUpdates();
-  // autoUpdater.checkForUpdatesAndNotify();
 });
 
 //-------------------------------------------------------------------
