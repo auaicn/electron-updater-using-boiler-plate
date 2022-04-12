@@ -7,17 +7,39 @@ var electron_updater_1 = require("electron-updater");
 var isDev = require("electron-is-dev");
 var path = require("path");
 var electron_log_1 = require("electron-log");
-//-------------------------------------------------------------------
-// Logging
-//
-// THIS SECTION IS NOT REQUIRED
-//
-// This logging setup is not required for auto-updates to work,
-// but it sure makes debugging easier :)
-//-------------------------------------------------------------------
+var win;
 electron_updater_1.autoUpdater.logger = electron_log_1["default"];
-// autoUpdater.logger.transports.file.level = 'info';
-// log.info('App starting...');
+electron_updater_1.autoUpdater.on("checking-for-update", function () {
+    sendStatusToWindow("Checking for update...");
+});
+electron_updater_1.autoUpdater.on("update-available", function (info) {
+    sendStatusToWindow("Update available.");
+});
+electron_updater_1.autoUpdater.on("update-not-available", function (info) {
+    sendStatusToWindow("Update not available.");
+});
+electron_updater_1.autoUpdater.on("error", function (err) {
+    sendStatusToWindow("Error in auto-updater. " + err);
+});
+electron_updater_1.autoUpdater.on("download-progress", function (progressObj) {
+    var log_message = "Download speed: " + progressObj.bytesPerSecond;
+    log_message = log_message + " - Downloaded " + progressObj.percent + "%";
+    log_message =
+        log_message +
+            " (" +
+            progressObj.transferred +
+            "/" +
+            progressObj.total +
+            ")";
+    sendStatusToWindow(log_message);
+});
+electron_updater_1.autoUpdater.on("update-downloaded", function (info) {
+    sendStatusToWindow("Update downloaded");
+});
+function sendStatusToWindow(text) {
+    electron_log_1["default"].info('[Event]', text);
+    win.webContents.send("message", text);
+}
 //-------------------------------------------------------------------
 // Define the menu
 //
@@ -53,11 +75,6 @@ electron_updater_1.autoUpdater.logger = electron_log_1["default"];
 // for the app to show a window than to have to click "About" to see
 // that updates are working.
 //-------------------------------------------------------------------
-var win;
-function sendStatusToWindow(text) {
-    electron_log_1["default"].info(text);
-    win.webContents.send("message", text);
-}
 function createDefaultWindow() {
     win = new electron_1.BrowserWindow({
         webPreferences: {
@@ -75,33 +92,6 @@ function createDefaultWindow() {
         : "file://".concat(path.join(__dirname, "../build/index.html")));
     return win;
 }
-electron_updater_1.autoUpdater.on("checking-for-update", function () {
-    sendStatusToWindow("Checking for update...");
-});
-electron_updater_1.autoUpdater.on("update-available", function (info) {
-    sendStatusToWindow("Update available.");
-});
-electron_updater_1.autoUpdater.on("update-not-available", function (info) {
-    sendStatusToWindow("Update not available.");
-});
-electron_updater_1.autoUpdater.on("error", function (err) {
-    sendStatusToWindow("Error in auto-updater. " + err);
-});
-electron_updater_1.autoUpdater.on("download-progress", function (progressObj) {
-    var log_message = "Download speed: " + progressObj.bytesPerSecond;
-    log_message = log_message + " - Downloaded " + progressObj.percent + "%";
-    log_message =
-        log_message +
-            " (" +
-            progressObj.transferred +
-            "/" +
-            progressObj.total +
-            ")";
-    sendStatusToWindow(log_message);
-});
-electron_updater_1.autoUpdater.on("update-downloaded", function (info) {
-    sendStatusToWindow("Update downloaded");
-});
 electron_1.app.on("ready", function () {
     // Create the Menu
     //   const menu = Menu.buildFromTemplate(template);
@@ -121,7 +111,9 @@ electron_1.app.on("window-all-closed", function () {
 // app quits.
 //-------------------------------------------------------------------
 electron_1.app.on("ready", function () {
-    electron_updater_1.autoUpdater.checkForUpdatesAndNotify();
+    electron_log_1["default"].info('App starting...');
+    electron_updater_1.autoUpdater.checkForUpdates();
+    // autoUpdater.checkForUpdatesAndNotify();
 });
 //-------------------------------------------------------------------
 // Auto updates - Option 2 - More control

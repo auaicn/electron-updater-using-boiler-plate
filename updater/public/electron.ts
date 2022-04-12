@@ -7,17 +7,48 @@ import * as isDev from "electron-is-dev";
 import * as path from "path";
 import log from "electron-log";
 
-//-------------------------------------------------------------------
-// Logging
-//
-// THIS SECTION IS NOT REQUIRED
-//
-// This logging setup is not required for auto-updates to work,
-// but it sure makes debugging easier :)
-//-------------------------------------------------------------------
+let win;
+
+// autoUpdate 가 내부적으로 찍는 로그를 수집하기 위해서 설정한다.
 autoUpdater.logger = log;
-// autoUpdater.logger.transports.file.level = 'info';
-// log.info('App starting...');
+
+autoUpdater.on("checking-for-update", () => {
+  sendStatusToWindow("Checking for update...");
+});
+
+autoUpdater.on("update-available", (info) => {
+  sendStatusToWindow("Update available.");
+});
+
+autoUpdater.on("update-not-available", (info) => {
+  sendStatusToWindow("Update not available.");
+});
+
+autoUpdater.on("error", (err) => {
+  sendStatusToWindow("Error in auto-updater. " + err);
+});
+
+autoUpdater.on("download-progress", (progressObj) => {
+  let log_message = "Download speed: " + progressObj.bytesPerSecond;
+  log_message = log_message + " - Downloaded " + progressObj.percent + "%";
+  log_message =
+    log_message +
+    " (" +
+    progressObj.transferred +
+    "/" +
+    progressObj.total +
+    ")";
+  sendStatusToWindow(log_message);
+});
+
+autoUpdater.on("update-downloaded", (info) => {
+  sendStatusToWindow("Update downloaded");
+});
+
+function sendStatusToWindow(text) {
+  log.info('[Event]', text);
+  win.webContents.send("message", text);
+}
 
 //-------------------------------------------------------------------
 // Define the menu
@@ -55,12 +86,7 @@ autoUpdater.logger = log;
 // for the app to show a window than to have to click "About" to see
 // that updates are working.
 //-------------------------------------------------------------------
-let win;
 
-function sendStatusToWindow(text) {
-  log.info(text);
-  win.webContents.send("message", text);
-}
 function createDefaultWindow() {
   win = new BrowserWindow({
     webPreferences: {
@@ -68,46 +94,22 @@ function createDefaultWindow() {
       contextIsolation: false,
     },
   });
+
   win.webContents.openDevTools();
   win.on("closed", () => {
     win = null;
   });
+
   //   win.loadURL(`file://${__dirname}/version.html#v${app.getVersion()}`);
   win.loadURL(
     isDev
       ? "http://localhost:3000"
       : `file://${path.join(__dirname, "../build/index.html")}`
   );
+
   return win;
 }
-autoUpdater.on("checking-for-update", () => {
-  sendStatusToWindow("Checking for update...");
-});
 
-autoUpdater.on("update-available", (info) => {
-  sendStatusToWindow("Update available.");
-});
-autoUpdater.on("update-not-available", (info) => {
-  sendStatusToWindow("Update not available.");
-});
-autoUpdater.on("error", (err) => {
-  sendStatusToWindow("Error in auto-updater. " + err);
-});
-autoUpdater.on("download-progress", (progressObj) => {
-  let log_message = "Download speed: " + progressObj.bytesPerSecond;
-  log_message = log_message + " - Downloaded " + progressObj.percent + "%";
-  log_message =
-    log_message +
-    " (" +
-    progressObj.transferred +
-    "/" +
-    progressObj.total +
-    ")";
-  sendStatusToWindow(log_message);
-});
-autoUpdater.on("update-downloaded", (info) => {
-  sendStatusToWindow("Update downloaded");
-});
 app.on("ready", function () {
   // Create the Menu
 //   const menu = Menu.buildFromTemplate(template);
@@ -115,6 +117,7 @@ app.on("ready", function () {
 
   createDefaultWindow();
 });
+
 app.on("window-all-closed", () => {
   app.quit();
 });
@@ -130,7 +133,10 @@ app.on("window-all-closed", () => {
 // app quits.
 //-------------------------------------------------------------------
 app.on("ready", function () {
-  autoUpdater.checkForUpdatesAndNotify();
+  log.info('App starting...');
+
+  autoUpdater.checkForUpdates();
+  // autoUpdater.checkForUpdatesAndNotify();
 });
 
 //-------------------------------------------------------------------
